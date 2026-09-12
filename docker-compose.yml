@@ -1,0 +1,12 @@
+services:
+  atlasiq:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ENABLE_LANGCHAIN_RUNTIME: "false"
+      KNOWLEDGE_DIR: data/knowledge
+      STORAGE_DIR: storage
+    volumes:
+      - ./storage:/app/storage
+

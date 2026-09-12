@@ -1,0 +1,155 @@
+Metadata-Version: 2.4
+Name: atlasiq-enterprise-knowledge-assistant
+Version: 0.1.0
+Summary: Enterprise Knowledge Assistant with hybrid RAG, LangChain orchestration, guardrails, and a polished operations console.
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.115.0
+Requires-Dist: uvicorn[standard]>=0.30.0
+Requires-Dist: jinja2>=3.1.4
+Requires-Dist: python-multipart>=0.0.9
+Requires-Dist: pydantic>=2.8.2
+Requires-Dist: langchain>=0.3.0
+Requires-Dist: langchain-openai>=0.2.0
+Requires-Dist: langchain-text-splitters>=0.3.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.3.0; extra == "dev"
+Requires-Dist: httpx>=0.27.0; extra == "dev"
+Requires-Dist: ruff>=0.6.0; extra == "dev"
+
+# AtlasIQ Enterprise Knowledge Assistant
+
+AtlasIQ is an enterprise-grade knowledge assistant designed for internal policy, operations, onboarding, and incident response workflows. It pairs a hybrid retrieval pipeline with LangChain-powered answer orchestration, citations, prompt-injection guardrails, persistent document indexing, and a high-end browser console.
+
+## Why this project feels production-ready
+
+- Hybrid retrieval blends semantic-style hashed retrieval with lexical scoring, so the system works out of the box even before external model credentials are configured.
+- LangChain orchestration can be enabled with an OpenAI key for richer grounded answers without changing the API surface.
+- Guardrails block common prompt-injection and data-exfiltration attempts before they reach the model layer.
+- Persistent storage keeps indexed documents and session memory in `storage/registry.json`.
+- The UI exposes health, ingestion, citations, runtime mode, and seeded enterprise documents for demo-ready storytelling.
+- The codebase is split into clear layers: API, core config, domain models, services, static assets, and tests.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A["Browser Console"] --> B["FastAPI API Layer"]
+    B --> C["EnterpriseKnowledgeEngine"]
+    C --> D["Guardrails"]
+    C --> E["Chunker + Loader"]
+    C --> F["Hybrid Retriever"]
+    C --> G["Registry Store"]
+    C --> H["LangChain Runtime (optional)"]
+    E --> G
+    F --> G
+    H --> I["OpenAI Chat Model"]
+```
+
+## Features
+
+- Ask grounded questions over enterprise knowledge with ranked citations.
+- Seed the workspace with example policies and run a polished demo instantly.
+- Upload `.txt`, `.md`, `.json`, and `.csv` knowledge files.
+- Paste ad hoc knowledge directly into the app for rapid experiments.
+- Track conversation history per session for short-term contextual continuity.
+- Switch between deterministic offline mode and LangChain LLM mode using environment configuration.
+
+## Quick Start
+
+1. Create and activate a virtual environment.
+2. Install dependencies:
+
+   ```bash
+   pip install -e .[dev]
+   ```
+
+3. Copy the environment file and adjust values as needed:
+
+   ```bash
+   copy .env.example .env
+   ```
+
+4. Start the server:
+
+   ```bash
+   uvicorn app.api.main:app --reload
+   ```
+
+5. Open [http://localhost:8000](http://localhost:8000).
+
+## LangChain Mode
+
+AtlasIQ is fully usable without external credentials. The default local setup uses Ollama.
+
+### Ollama Mode
+
+1. Install Ollama for Windows: [Ollama Windows](https://docs.ollama.com/windows)
+2. Pull a model:
+
+   ```bash
+   ollama pull llama3.2
+   ```
+
+3. Keep these settings in `.env`:
+
+   ```env
+   LLM_PROVIDER=ollama
+   OLLAMA_BASE_URL=http://localhost:11434
+   OLLAMA_MODEL=llama3.2
+   ```
+
+4. Start the app and ask questions normally.
+
+### OpenAI Mode
+
+If you later want to use OpenAI instead:
+
+1. Set `LLM_PROVIDER=openai`.
+2. Set `ENABLE_LANGCHAIN_RUNTIME=true`.
+3. Provide `OPENAI_API_KEY`.
+4. Optionally change `OPENAI_CHAT_MODEL`.
+
+When the configured LLM provider is unavailable, the assistant falls back to a deterministic synthesis engine that still returns citations and confidence scores.
+
+## API Overview
+
+- `GET /health`
+- `GET /api/v1/overview`
+- `GET /api/v1/documents`
+- `POST /api/v1/ingest/seed`
+- `POST /api/v1/ingest/manual`
+- `POST /api/v1/ingest/files`
+- `POST /api/v1/chat/query`
+
+## Demo Questions
+
+- What is our customer escalation SLA for P1 incidents?
+- How should a new employee complete security onboarding?
+- Which controls are required before a vendor gets production access?
+- Summarize the release readiness checklist for enterprise deployments.
+
+## Project Structure
+
+```text
+app/
+  api/
+  core/
+  domain/
+  services/
+  static/
+  templates/
+data/knowledge/
+storage/
+tests/
+```
+
+## Docker
+
+```bash
+docker compose up --build
+```
+
+## Verification
+
+The project includes unit tests for chunking, retrieval, and guardrails. A syntax compilation pass is also safe to run in minimal environments.
